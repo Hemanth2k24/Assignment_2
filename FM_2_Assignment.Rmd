@@ -1,0 +1,85 @@
+---
+title: "FML_Assignment_2"
+author: "Hemanth"
+date: "2024-02-26"
+output: html_document
+---
+```{r}
+library(ISLR)
+library(caret)
+
+summary(Default)
+```
+
+
+```{r}
+# Normalizing the data before modeling
+norm_model <- preProcess(Default, method = c('range'))
+Default_normalized <- predict(norm_model, Default)
+
+summary(Default_normalized)
+```
+
+
+```{r}
+# Training a k-NN model using the train() function from caret
+set.seed(123)
+model <- train(default ~ balance + income, data = Default_normalized, method = "knn")
+model
+```
+
+
+```{r}
+
+ #Customizing search grid
+set.seed(123)
+search_grid <- expand.grid(k = c(2, 7, 9, 15))
+model <- train(default ~ balance + income, data = Default_normalized, method = "knn", tuneGrid = search_grid)
+model
+
+
+```
+
+```{r}
+# k-NN Implementation in R
+library(class)
+
+summary(Default)
+
+norm_model <- preProcess(Default, method = c('range'))
+Default_normalized <- predict(norm_model, Default)
+Default_normalized <- Default_normalized[, -2]
+
+Index_Train <- createDataPartition(Default_normalized$default, p = 0.8, list = FALSE)
+Train <- Default_normalized[Index_Train, ]
+Test <- Default_normalized[-Index_Train, ]
+```
+
+
+```{r}
+
+# EFFECT of k in the k-NN classifier
+Train_Predictors <- Train[, 2:3]
+Test_Predictors <- Test[, 2:3]
+Train_labels <- Train[, 1]
+Test_labels <- Test[, 1]
+
+# Train a k-NN model where k = 4
+Predicted_Test_labels <- knn(Train_Predictors, Test_Predictors, cl = Train_labels, k = 4)
+
+# Look at the 6 first value of predicted class (i.e., default status) of test set
+head(Predicted_Test_labels)
+
+# Confusion Matrix - Method 1
+library(gmodels)
+CrossTable(x = Test_labels, y = Predicted_Test_labels, prop.chisq = FALSE)
+
+# Assignment - TASK 1: CONFUSION MATRIX
+confusionMatrix(Test_labels, Predicted_Test_labels)
+
+# TASK 2: ROC Curve
+library(pROC)
+data(aSAH)
+plot.roc(aSAH$outcome, aSAH$s100b, main = "Confidence interval of a threshold", percent = TRUE, ci = TRUE, of = "thresholds", thresholds = "best", print.thres = "best")
+```
+
